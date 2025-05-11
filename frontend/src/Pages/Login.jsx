@@ -1,79 +1,85 @@
-import { useState } from 'react';
-import { Phone, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase"; // Make sure the path is correct for your Firebase config
+import { toast, ToastContainer } from "react-toastify";
+import { useState } from "react";
+import "react-toastify/dist/ReactToastify.css"; // Make sure to import toastify CSS
 
-const Login = () => {
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const bdPhoneRegex = /^(?:\+88|88)?01[3-9]\d{8}$/;
-    if (!bdPhoneRegex.test(phone)) {
-      alert('Please enter a valid Bangladeshi phone number');
-      return;
+    try {
+      // Attempt to sign in the user
+      await signInWithEmailAndPassword(auth, email, password);
+      toast.success("User logged in successfully!", {
+        position: "top-center",
+        autoClose: 5000, // Toast stays for 5 seconds
+      });
+      window.location.href = "/profile"; // Redirect after successful login
+    } catch (error) {
+      toast.error("Login failed: " + error.message, {
+        position: "bottom-center",
+        autoClose: 5000, // Toast stays for 5 seconds
+      });
     }
-    console.log({ phone, password });
   };
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-rose-50 via-pink-100 to-amber-50 flex items-center justify-center px-4 overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-[#800000]/20 rounded-full blur-3xl opacity-50 -translate-x-1/2 -translate-y-1/2 z-0" />
-      <div className="absolute bottom-0 right-0 w-72 h-72 bg-amber-300/30 rounded-full blur-3xl opacity-50 translate-x-1/2 translate-y-1/2 z-0" />
-
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-pink-100 to-amber-50">
       <div className="relative z-10 bg-white/80 backdrop-blur-xl shadow-xl rounded-3xl px-8 py-10 w-full max-w-md border border-[#f5c2c7]">
         <h2 className="text-3xl font-extrabold text-[#800000] text-center mb-8 tracking-tight">
-          Welcome Back
+          Login to Your Account
         </h2>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          {/* Phone Field */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email */}
           <div className="relative">
-            <Phone className="absolute top-3.5 left-4 w-5 h-5 text-[#800000]" />
             <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="01XXXXXXXXX"
-              className="pl-12 pr-4 py-3 w-full rounded-full border border-gray-300 shadow-sm bg-white focus:ring-2 focus:ring-[#800000] focus:outline-none placeholder:text-gray-500 transition"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email Address"
+              className="pl-4 pr-4 py-3 w-full rounded-full border border-gray-300 shadow-sm bg-white focus:ring-2 focus:ring-[#800000] focus:outline-none placeholder:text-gray-500 transition"
               required
             />
           </div>
 
-          {/* Password Field */}
+          {/* Password */}
           <div className="relative">
-            <Lock className="absolute top-3.5 left-4 w-5 h-5 text-[#800000]" />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="pl-12 pr-4 py-3 w-full rounded-full border border-gray-300 shadow-sm bg-white focus:ring-2 focus:ring-[#800000] focus:outline-none placeholder:text-gray-500 transition"
+              className="pl-4 pr-4 py-3 w-full rounded-full border border-gray-300 shadow-sm bg-white focus:ring-2 focus:ring-[#800000] focus:outline-none placeholder:text-gray-500 transition"
               required
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-[#800000] hover:bg-[#660000] text-white py-3 rounded-full font-semibold text-lg tracking-wide transition duration-300 shadow-md hover:shadow-lg"
-          >
-            Login
-          </button>
+          <div className="d-grid">
+            <button
+              type="submit"
+              className="w-full bg-[#800000] hover:bg-[#660000] text-white py-3 rounded-full font-semibold text-lg tracking-wide transition duration-300 shadow-md hover:shadow-lg"
+            >
+              Login
+            </button>
+          </div>
+
+          <p className="mt-6 text-sm text-center text-gray-700">
+            New user{" "}
+            <a href="/register" className="text-[#800000] font-semibold hover:underline transition">
+              Register Here
+            </a>
+          </p>
         </form>
 
-        <p className="mt-6 text-sm text-center text-gray-700">
-          Don’t have an account?{' '}
-          <Link
-            to="/register"
-            className="text-[#800000] font-semibold hover:underline transition"
-          >
-            Register
-          </Link>
-        </p>
+        {/* Include ToastContainer for toasts */}
+        <ToastContainer />
       </div>
     </div>
   );
-};
+}
 
 export default Login;

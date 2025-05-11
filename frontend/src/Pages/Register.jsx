@@ -1,28 +1,43 @@
 import { useState } from 'react';
-import { Phone, Lock, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Lock, Mail, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { auth, db } from '../firebase'; // Firebase config is here as per your directory
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { setDoc, doc } from 'firebase/firestore';
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleRegister = (e) => {
+  const navigate = useNavigate();
+
+  const handleRegister = async (e) => {
     e.preventDefault();
-    const bdPhoneRegex = /^(?:\+88|88)?01[3-9]\d{8}$/;
-
-    if (!bdPhoneRegex.test(phone)) {
-      alert('Please enter a valid Bangladeshi phone number');
-      return;
-    }
-
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
-    console.log({ name, phone, password });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, 'Users', user.uid), {
+        email: user.email,
+        name,
+        photo: '',
+      });
+
+      toast.success('Registration successful!');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   return (
@@ -50,14 +65,14 @@ const Register = () => {
             />
           </div>
 
-          {/* Phone */}
+          {/* Email */}
           <div className="relative">
-            <Phone className="absolute top-3.5 left-4 w-5 h-5 text-[#800000]" />
+            <Mail className="absolute top-3.5 left-4 w-5 h-5 text-[#800000]" />
             <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="01XXXXXXXXX"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email Address"
               className="pl-12 pr-4 py-3 w-full rounded-full border border-gray-300 shadow-sm bg-white focus:ring-2 focus:ring-[#800000] focus:outline-none placeholder:text-gray-500 transition"
               required
             />
@@ -93,16 +108,13 @@ const Register = () => {
             type="submit"
             className="w-full bg-[#800000] hover:bg-[#660000] text-white py-3 rounded-full font-semibold text-lg tracking-wide transition duration-300 shadow-md hover:shadow-lg"
           >
-            Register
+            Sign Up
           </button>
         </form>
 
         <p className="mt-6 text-sm text-center text-gray-700">
-          Already have an account?{' '}
-          <Link
-            to="/login"
-            className="text-[#800000] font-semibold hover:underline transition"
-          >
+          Already registered?{' '}
+          <Link to="/login" className="text-[#800000] font-semibold hover:underline transition">
             Login
           </Link>
         </p>
