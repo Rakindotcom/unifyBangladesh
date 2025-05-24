@@ -1,11 +1,9 @@
-import ProductSection from './components/ProductSection';
+import React from 'react'
 
-function HomePage() {
-    return (
-        <>
-            {/* other sections */}
-            <ProductSection />
-            {/* more sections */}
-        </>
-    );
+const Homepage = () => {
+  return (
+    <div>Homepage</div>
+  )
 }
+
+export default Homepage
