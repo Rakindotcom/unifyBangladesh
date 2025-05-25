@@ -17,6 +17,7 @@ import Homepage from './Pages/Homepage'
 import Contact from './Components/Contact'
 import FAQ from './Components/FAQ'
 import Story from './Components/Story'
+import Admin from './Pages/Admin'
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
 
       <Routes>
         <Route path="/" element={<Homepage />} />
+        <Route path="/home" element={<Homepage />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -39,8 +41,10 @@ const App = () => {
         <Route path="/faqs" element={<FAQ />} />
         <Route path="/story" element={<Story />} />
 
+        <Route path="/admin" element={<Admin />} />
 
-        {/* 404 Not Found */}   
+
+        {/* 404 Not Found */}
         <Route path="*" element={<NotFound />} />
       </Routes>
 

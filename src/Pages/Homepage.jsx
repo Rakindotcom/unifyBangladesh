@@ -1,8 +1,11 @@
 import React from 'react'
+import HeroSlideshow from '../Components/HeroSlideshow'
 
 const Homepage = () => {
   return (
-    <div>Homepage</div>
+    <>
+    <HeroSlideshow />
+    </>
   )
 }
 

@@ -18,7 +18,7 @@ const Profile = () => {
     name: "",
     mobile: "",
     address: "",
-    gender: "male",
+    gender: "Male",
   });
   const [errors, setErrors] = useState({});
 
@@ -97,7 +97,7 @@ const Profile = () => {
 
   // Cancel editing
   const handleCancel = () => {
-    setFormData(profile || { name: "", mobile: "", address: "", gender: "male" });
+    setFormData(profile || { name: "", mobile: "", address: "", gender: "Male" });
     setIsEditing(false);
     setErrors({});
   };
@@ -209,8 +209,8 @@ const Profile = () => {
                 }`}
                 aria-describedby={errors.gender ? "gender-error" : undefined}
               >
-                <option value="male">male</option>
-                <option value="female">female</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
               </select>
               {errors.gender && (
                 <p id="gender-error" className="text-red-500 text-sm mt-1">{errors.gender}</p>
