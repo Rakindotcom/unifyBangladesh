@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react"
-import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin } from "lucide-react"
+import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin, User, LogOut } from "lucide-react"
 import { Link } from "react-router-dom"
 import { db, auth } from "../firebase"
+import { signOut } from "firebase/auth"
 import { collection, addDoc, doc, getDoc } from "firebase/firestore"
 
 // Add these new imports at the top
 import { onAuthStateChanged } from "firebase/auth"
 import Modal from 'react-modal'
+import { toast } from "react-toastify"
 
 // Add modal styles
 Modal.setAppElement('#root')
@@ -25,16 +27,23 @@ const customStyles = {
 
 
 const categories = [
-  "Makeup",
-  "Skin Care",
-  "Hair Care",
-  "Mom & Baby",
-  "Daily Essential",
-  "Lingerie",
-  "Fragrance",
-  "Accessories",
-  "Men's Care",
+  "Cream & Moisturizers",
+  "Essence",
+  "Eye Care",
   "Face Mask",
+  "Face Primer",
+  "Facewash & Cleanser",
+  "Fragrance",
+  "Hair Care",
+  "Lip Care",
+  "Lotion",
+  "Makeup",
+  "Makeup Remover",
+  "Non Pharma",
+  "Serum",
+  "Sunscreen",
+  "Toner",
+  "Tools & Accessories",
 ]
 
 // // Example cart items
@@ -198,6 +207,16 @@ const Header = () => {
     }
   }
 
+  const onLogout = async () => {
+    try {
+      await signOut(auth)
+      toast.success('Logged out successfully!')
+    } catch (error) {
+      console.error("Error logging out: ", error)
+      toast.error('Error logging out. Please try again.')
+    }
+  }
+
 
   // Add checkout modal component
   const CheckoutModal = () => (
@@ -324,7 +343,7 @@ const Header = () => {
         </div>
 
         {/* Right Icons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-5">
           <div className="relative cursor-pointer" onClick={() => setCartOpen(true)}>
             <ShoppingCart className="text-[#800000] w-6 h-6" />
             <span className="absolute -top-2 -right-2 bg-[#800000] text-white text-xs font-semibold rounded-full px-1.5">
@@ -332,11 +351,21 @@ const Header = () => {
             </span>
           </div>
 
-          <Link to="/login">
+          {!currentUser&&<Link to="/login">
             <button className="px-3 py-1.5 text-sm font-medium text-white bg-[#800000] rounded-full hover:bg-[#660000] transition">
               Login
             </button>
-          </Link>
+          </Link>}
+
+          {currentUser && (
+            <div className="flex flex-row items-center gap-5">
+              <User className="text-[#800000] w-6 h-6 cursor-pointer" />
+              <h2 className="text-[#800000] font-semibold hidden md:block">{userDetails.name ? userDetails.name.split(" ").slice(0, 2).join(" ") : "User"}</h2>
+              <button onClick={onLogout} className="text-[#800000] hover:text-red-600 transition">
+                <LogOut className="text-[#800000] w-6 h-6 cursor-pointer" />
+              </button>
+            </div>
+          )}
 
           <button className="md:hidden" onClick={() => setMobileMenuOpen(true)}>
             <Menu className="w-5 h-5 text-gray-700" />
@@ -370,7 +399,7 @@ const Header = () => {
               {categories.map((cat, i) => (
                 <li key={i}>
                   <Link
-                    to={`/category/${cat.toLowerCase().replace(/ /g, "-")}`}
+                    to={`?category=${encodeURIComponent(cat)}`}
                     className="block px-3 py-2 rounded-lg border border-gray-200 shadow-sm hover:bg-[#fef3f2] hover:text-[#800000] transition"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -530,34 +559,34 @@ const Header = () => {
       </div>
 
       {/* Desktop Sidebar */}
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-white via-rose-50 to-pink-100 shadow-2xl p-5 transition-transform duration-300 z-50 overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-[#800000]">Categories</h2>
-          <button onClick={() => setSidebarOpen(false)}>
-            <X className="w-5 h-5 text-gray-700 hover:text-red-600" />
-          </button>
+        <div
+          className={`fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-white via-rose-50 to-pink-100 shadow-2xl p-5 transition-transform duration-300 z-50 overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-[#800000]">Categories</h2>
+            <button onClick={() => setSidebarOpen(false)}>
+          <X className="w-5 h-5 text-gray-700 hover:text-red-600" />
+            </button>
+          </div>
+
+          <ul className="space-y-3">
+            {categories.map((cat, idx) => (
+          <li key={idx}>
+            <Link
+              to={`?category=${encodeURIComponent(cat)}`}
+              className="flex items-center px-3 py-2 rounded-lg border border-orange-500 shadow-sm text-gray-800 hover:bg-[#ffe4e6] hover:text-[#800000] transition"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="w-2.5 h-2.5 bg-orange-500 rounded-full mr-2"></span>
+              {cat}
+            </Link>
+          </li>
+            ))}
+          </ul>
         </div>
 
-        <ul className="space-y-3">
-          {categories.map((cat, idx) => (
-            <li key={idx}>
-              <Link
-                to={`/category/${cat.toLowerCase().replace(/ /g, "-")}`}
-                className="flex items-center px-3 py-2 rounded-lg border border-orange-500 shadow-sm text-gray-800 hover:bg-[#ffe4e6] hover:text-[#800000] transition"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <span className="w-2.5 h-2.5 bg-orange-500 rounded-full mr-2"></span>
-                {cat}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Dim Background for Sidebar */}
+        {/* Dim Background for Sidebar */}
       {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSidebarOpen(false)}></div>}
       <CheckoutModal />
     </header>
