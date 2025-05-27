@@ -1,6 +1,28 @@
 import { useState, useEffect } from "react"
 import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin } from "lucide-react"
 import { Link } from "react-router-dom"
+import { db, auth } from "../firebase"
+import { collection, addDoc, doc, getDoc } from "firebase/firestore"
+
+// Add these new imports at the top
+import { onAuthStateChanged } from "firebase/auth"
+import Modal from 'react-modal'
+
+// Add modal styles
+Modal.setAppElement('#root')
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    maxWidth: '500px',
+    width: '90%',
+  },
+}
+
 
 const categories = [
   "Makeup",
@@ -46,7 +68,7 @@ const categories = [
 let reloadCartLocal;
 export { reloadCartLocal };
 
-const Header = ( ) => {
+const Header = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
@@ -60,6 +82,17 @@ const Header = ( ) => {
     return []
   })
   const [deliveryLocation, setDeliveryLocation] = useState("inside")
+
+  // Add new states
+  const [showCheckout, setShowCheckout] = useState(false)
+  const [userDetails, setUserDetails] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
+  })
+  const [currentUser, setCurrentUser] = useState(null)
+  const [loadingUser, setLoadingUser] = useState(true)
 
   const handleSearchToggle = () => {
     setIsSearchActive(!isSearchActive)
@@ -103,6 +136,142 @@ const Header = ( ) => {
   const deliveryCharge = deliveryLocation === "inside" ? 70 : 120
   const total = subtotal + deliveryCharge
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+
+
+  // Add auth state listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user)
+      if (user) {
+        // Fetch user details from Firestore
+        const userDoc = await getDoc(doc(db, "Users", user.uid))
+        if (userDoc.exists()) {
+          setUserDetails({
+            name: userDoc.data().name || '',
+            email: userDoc.data().email || '',
+            phone: userDoc.data().mobile || '',
+            address: userDoc.data().address || ''
+          })
+        }
+      }
+      setLoadingUser(false)
+    })
+    return () => unsubscribe()
+  }, [])
+  // Add checkout handler
+  const handleCheckout = async () => {
+    setShowCheckout(true)
+    setCartOpen(false)
+  }
+
+  // Add order submission handler
+  const submitOrder = async (e) => {
+    e.preventDefault()
+    try {
+      const orderData = {
+        user: currentUser ? {
+          uid: currentUser.uid,
+          ...userDetails
+        } : userDetails,
+        items: cartItems,
+        subtotal,
+        deliveryCharge,
+        total,
+        deliveryLocation,
+        status: 'pending',
+        createdAt: new Date()
+      }
+
+      // Add order to Firestore
+      const docRef = await addDoc(collection(db, "orders"), orderData)
+      console.log("Order submitted with ID: ", docRef.id)
+
+      // Clear cart
+      localStorage.removeItem('cart')
+      setCartItems([])
+      setCartOpen(false)
+      setShowCheckout(false)
+      alert('Order placed successfully!')
+    } catch (error) {
+      console.error("Error submitting order: ", error)
+      alert('Error placing order. Please try again.')
+    }
+  }
+
+
+  // Add checkout modal component
+  const CheckoutModal = () => (
+    <Modal
+      isOpen={showCheckout}
+      onRequestClose={() => setShowCheckout(false)}
+      style={customStyles}
+    >
+      <div className="p-4">
+        <h2 className="text-xl font-bold mb-4">Checkout Details</h2>
+        <form onSubmit={submitOrder} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium">Full Name</label>
+            <input
+              type="text"
+              required
+              value={userDetails.name}
+              onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Email</label>
+            <input
+              type="email"
+              required
+              value={userDetails.email}
+              onChange={(e) => setUserDetails({ ...userDetails, email: e.target.value })}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Phone Number</label>
+            <input
+              type="tel"
+              required
+              value={userDetails.phone}
+              onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Billing Address</label>
+            <textarea
+              required
+              value={userDetails.address}
+              onChange={(e) => setUserDetails({ ...userDetails, address: e.target.value })}
+              className="w-full p-2 border rounded"
+              rows="3"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCheckout(false)}
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-[#800000] text-white rounded hover:bg-[#660000]"
+            >
+              {loadingUser ? 'Loading...' : 'Confirm Order'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </Modal>
+  )
 
 
   return (
@@ -236,8 +405,8 @@ const Header = ( ) => {
                 <button
                   onClick={() => setDeliveryLocation("inside")}
                   className={`px-3 py-1.5 text-xs rounded-full border transition ${deliveryLocation === "inside"
-                      ? "bg-orange-400 text-white border-orange-400"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                    ? "bg-orange-400 text-white border-orange-400"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
                     }`}
                 >
                   Inside Dhaka (৳70)
@@ -245,8 +414,8 @@ const Header = ( ) => {
                 <button
                   onClick={() => setDeliveryLocation("outside")}
                   className={`px-3 py-1.5 text-xs rounded-full border transition ${deliveryLocation === "outside"
-                      ? "bg-orange-400 text-white border-orange-400"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                    ? "bg-orange-400 text-white border-orange-400"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
                     }`}
                 >
                   Outside Dhaka (৳120)
@@ -322,7 +491,10 @@ const Header = ( ) => {
                   </div>
                 </div>
 
-                <button className="w-full mt-4 bg-orange-400 text-white py-3 rounded-lg font-medium hover:bg-orange-500 transition">
+                <button
+                  className="w-full mt-4 bg-orange-400 text-white py-3 rounded-lg font-medium hover:bg-orange-500 transition"
+                  onClick={handleCheckout}
+                >
                   Proceed to Checkout
                 </button>
               </div>
@@ -387,6 +559,7 @@ const Header = ( ) => {
 
       {/* Dim Background for Sidebar */}
       {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSidebarOpen(false)}></div>}
+      <CheckoutModal />
     </header>
   )
 }

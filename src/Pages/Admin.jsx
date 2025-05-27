@@ -4,6 +4,195 @@ import { db } from "../firebase";
 import {setDoc ,doc} from "firebase/firestore";
 import axios from "axios";
 
+import { collection, query, where, onSnapshot, updateDoc } from "firebase/firestore";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import {  motion, AnimatePresence } from "framer-motion";
+
+const OrdersTab = () => {
+  const [orders, setOrders] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [expandedOrder, setExpandedOrder] = useState(null);
+
+  useEffect(() => {
+    let q = query(collection(db, "orders"));
+    
+    // Add status filter
+    if (selectedStatus !== "all") {
+      q = query(q, where("status", "==", selectedStatus));
+    }
+    
+    // Add date range filter
+    if (startDate && endDate) {
+      q = query(q,
+        where("createdAt", ">=", startDate),
+        where("createdAt", "<=", endDate)
+      );
+    }
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const ordersData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate()
+      }));
+      setOrders(ordersData);
+    });
+
+    return () => unsubscribe();
+  }, [selectedStatus, startDate, endDate]);
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await updateDoc(doc(db, "orders", orderId), {
+        status: newStatus
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  const statusColors = {
+    pending: "bg-yellow-100 text-yellow-800",
+    confirmed: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800"
+  };
+
+  return (
+    <section className="bg-white rounded-2xl p-6 sm:p-8 border border-orange-600/20 shadow-md shadow-gray-500">
+      <h2 className="text-2xl font-bold text-orange-600 mb-6">Customer Orders</h2>
+      
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <label>Status:</label>
+          <select 
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="border rounded p-1"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <label>From:</label>
+          <DatePicker
+            selected={startDate}
+            onChange={date => setStartDate(date)}
+            className="border rounded p-1"
+          />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <label>To:</label>
+          <DatePicker
+            selected={endDate}
+            onChange={date => setEndDate(date)}
+            className="border rounded p-1"
+          />
+        </div>
+      </div>
+
+      {/* Orders List */}
+      <div className="space-y-4">
+        {orders.length === 0 ? (
+          <p className="text-gray-800 text-center">No orders found.</p>
+        ) : (
+          orders.map(order => (
+            <div 
+              key={order.id}
+              className="border rounded-lg p-4 shadow-sm"
+            >
+              <div 
+                className="flex justify-between items-center cursor-pointer"
+                onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+              >
+                <div>
+                  <h3 className="font-semibold">{order.user.name}</h3>
+                  <p className="text-sm text-gray-600">{order.user.email}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className={`px-2 py-1 rounded-full text-sm ${statusColors[order.status]}`}>
+                    {order.status}
+                  </span>
+                  <span className="font-bold">৳{order.total}</span>
+                </div>
+              </div>
+
+              <AnimatePresence>
+                {expandedOrder === order.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4 pt-4 border-t"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">Delivery Info</h4>
+                        <p>Address: {order.user.address}</p>
+                        <p>Phone: {order.user.phone}</p>
+                        <p>Location: {order.deliveryLocation}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2">Order Details</h4>
+                        <p>Date: {order.createdAt?.toLocaleDateString()}</p>
+                        <p>Subtotal: ৳{order.subtotal}</p>
+                        <p>Delivery: ৳{order.deliveryCharge}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <h4 className="font-semibold mb-2">Items</h4>
+                      <div className="space-y-2">
+                        {order.items.map(item => (
+                          <div key={item.id} className="flex gap-4">
+                            <img 
+                              src={item.photoUrl} 
+                              alt={item.productName}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                            <div>
+                              <p>{item.productName}</p>
+                              <p className="text-sm">Size: {item.size}</p>
+                              <p className="text-sm">Quantity: {item.quantity}</p>
+                              <p className="text-sm">Price: ৳{item.price}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex justify-between items-center">
+                      <select
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        className="border rounded p-1"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+};
+
+
 const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("addProduct");
@@ -18,7 +207,6 @@ const Admin = () => {
     photo: null,
   });
   const [error, setError] = useState("");
-  const [orders] = useState([]);
 
   // Simulate loading (replace with auth check later)
   useEffect(() => {
@@ -363,43 +551,7 @@ const Admin = () => {
         )}
 
         {/* Customer Orders Tab */}
-        {activeTab === "orders" && (
-          <section className="bg-white rounded-2xl p-6 sm:p-8 border border-orange-600/20 shadow-md shadow-gray-500">
-            <h2 className="text-2xl font-bold text-orange-600 mb-6">Customer Orders</h2>
-            {orders.length === 0 ? (
-              <p className="text-gray-800 text-12px justifiedCenter">No orders found.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-12px text-gray-800">
-                  <thead>
-                    <tr className="border-b border-orange-600/20">
-                      <th className="py-3 px-4 font-bold text-orange-600">Order ID</th>
-                      <th className="py-3 px-4 font-bold text-orange-600">Customer</th>
-                      <th className="py-3 px-4 font-bold text-orange-600">Products</th>
-                      <th className="py-3 px-4 font-bold text-orange-600">Total</th>
-                      <th className="py-3 px-4 font-bold text-orange-600">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order.id} className="border-b border-gray-200">
-                        <td className="py-3 px-4">{order.id}</td>
-                        <td className="py-3 px-4">{order.customerName}</td>
-                        <td className="py-3 px-4">
-                          {order.products?.map((p) => p.productName).join(", ")}
-                        </td>
-                        <td className="py-3 px-4 text-maroon">
-                          <span className="text-maroon">{order.total}</span>
-                        </td>
-                        <td className="py-3 px-4">{order.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        )}
+        {activeTab === "orders" && <OrdersTab />}
       </div>
     </div>
   );
