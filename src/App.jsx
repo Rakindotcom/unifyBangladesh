@@ -21,6 +21,7 @@ import Admin from './Pages/Admin'
 import Product from './Pages/Product'
 import ProtectedRoute from './Middlewares/ProtectedRoute'
 import NotAuthorized from './Pages/NotAuthorized'
+import Team from './Pages/Team'
 
 const App = () => {
   return (
@@ -39,6 +40,7 @@ const App = () => {
         </Route>
 
         <Route path="/mission" element={<Mission />} />
+        <Route path="/team" element={<Team />} />
         <Route path="/refund" element={<Refund />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
