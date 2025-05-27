@@ -53,7 +53,7 @@ const App = () => {
 
         {/* coming soon */}
         <Route path="/blog" element={<ComingSoon />} />
-        <Route path="/brand" element={<ComingSoon />} />
+        <Route path="/brands" element={<ComingSoon />} />
 
 
         <Route element={<ProtectedRoute requiredRole="admin" />}>

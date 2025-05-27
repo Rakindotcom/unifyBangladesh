@@ -48,7 +48,7 @@ const ComingSoon = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 relative overflow-hidden">
+    <div className="min-h-screen pt-20 pb-20 bg-gradient-to-br from-orange-50 via-white to-orange-100 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Floating Circles */}
