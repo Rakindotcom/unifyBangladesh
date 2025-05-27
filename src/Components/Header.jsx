@@ -1,13 +1,14 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin, User, LogOut, Heart, ChevronDown } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { db, auth } from "../firebase"
 import { signOut } from "firebase/auth"
 import { collection, addDoc, doc, getDoc } from "firebase/firestore"
 import { onAuthStateChanged } from "firebase/auth"
 import Modal from "react-modal"
 import { toast } from "react-toastify"
-import "../CSS/Header.css"
 
 // Modal setup
 Modal.setAppElement("#root")
@@ -79,6 +80,17 @@ const Header = () => {
   const [currentUser, setCurrentUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  const navigate = useNavigate()
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      const encodedQuery = encodeURIComponent(searchQuery.trim())
+      navigate(`/?product=${encodedQuery}`)
+      setIsSearchActive(false) // Close mobile search
+    }
+  }
 
   const handleSearchToggle = () => {
     setIsSearchActive(!isSearchActive)
@@ -297,12 +309,12 @@ const Header = () => {
   )
 
   return (
-    <header className="bg-orange-50 shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       {/* Mobile Search Mode */}
       {isSearchActive && (
         <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button onClick={handleSearchToggle} className="text-gray-500">
+          <form onSubmit={handleSearch} className="flex items-center gap-3">
+            <button type="button" onClick={handleSearchToggle} className="text-gray-500">
               <X className="w-5 h-5" />
             </button>
             <div className="flex-1 relative">
@@ -316,7 +328,7 @@ const Header = () => {
                 autoFocus
               />
             </div>
-          </div>
+          </form>
         </div>
       )}
 
@@ -331,7 +343,7 @@ const Header = () => {
 
         {/* Desktop Search */}
         <div className="hidden md:block flex-1 mx-8 max-w-xl">
-          <div className="relative">
+          <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
@@ -340,7 +352,7 @@ const Header = () => {
               placeholder="Search for products, brands and categories..."
               className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all hover:border-gray-400"
             />
-          </div>
+          </form>
         </div>
 
         {/* Right Section */}
