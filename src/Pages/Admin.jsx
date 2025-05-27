@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PlusCircle, ShoppingCart } from "lucide-react";
+import { db } from "../firebase";
+import {setDoc ,doc} from "firebase/firestore";
 
 const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,28 +17,29 @@ const Admin = () => {
     photo: null,
   });
   const [error, setError] = useState("");
-  const [orders] = useState([]); // Empty, no mock data
+  const [orders] = useState([]);
+  const fileInputRef = useRef(null);
 
   // Simulate loading (replace with auth check later)
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000); // 2s mock delay
+    const timer = setTimeout(() => setIsLoading(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle file input
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.size > 1 * 1024 * 1024) {
+    if (!file) return;
+
+    if (file.size > 1 * 1024 * 1024) {
       setError("Photo must be under 1MB");
       return;
     }
-    if (file && !file.type.startsWith("image/")) {
+    if (!file.type.startsWith("image/")) {
       setError("Only image files are allowed (JPG, PNG, WebP)");
       return;
     }
@@ -44,15 +47,17 @@ const Admin = () => {
     setError("");
   };
 
-  // Handle category selection
   const handleCategoryChange = (e) => {
     const selected = Array.from(e.target.selectedOptions, (option) => option.value);
     setFormData({ ...formData, categories: selected });
   };
 
-  // Handle form submission (mock, replace with Firebase later)
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    console.log("Form submitted with data:", formData);
     e.preventDefault();
+    setError("");
+    console.log("Submitting form...");
+    // Validate all fields
     if (
       !formData.productName ||
       !formData.categories.length ||
@@ -60,26 +65,80 @@ const Admin = () => {
       !formData.regularPrice ||
       !formData.productID ||
       !formData.price ||
-      !formData.description ||
-      !formData.photo
+      !formData.description 
+      //||!formData.photo
     ) {
+      console.log("Validation failed: All fields are required");
       setError("All fields are required");
       return;
     }
-    // Mock success
-    setFormData({
-      productName: "",
-      categories: [],
-      size: "",
-      regularPrice: "",
-      productID: "",
-      price: "",
-      description: "",
-      photo: null,
-    });
-    setError("");
-    alert("Product added successfully! (UI-only)");
+
+    console.log("All fields are valid, proceeding with submission...");
+
+    try {
+      // Check for existing product ID
+      // const productsRef = await collection(db, "products");
+      // const q = await query(productsRef, where("productID", "==", formData.productID));
+      // const querySnapshot = await getDocs(q);
+      
+      // if (!querySnapshot.empty) {
+      //    console.log("Product ID already exists:", formData.productID);
+      //   throw new Error("Product ID already exists. Please use a unique ID.");
+      // }
+
+      // console.log("Product ID is unique, proceeding to add product...");
+
+      // // Upload image to Firebase Storage
+      // const storageRef = ref(
+      //   storage,
+      //   `products/${formData.productID}/${formData.photo.name}`
+      // );
+      // const uploadTask = await uploadBytes(storageRef, formData.photo);
+      // const photoURL = await getDownloadURL(uploadTask.ref);
+
+      // Create product data object
+      const productData = {
+        productName: formData.productName,
+        categories: formData.categories,
+        size: formData.size,
+        regularPrice: parseFloat(formData.regularPrice),
+        productID: formData.productID,
+        price: parseFloat(formData.price),
+        description: formData.description,
+        photoUrl: "https://d2v5dzhdg4zhx3.cloudfront.net/web-assets/images/storypages/primary/ProductShowcasesampleimages/JPEG/Product+Showcase-1.jpg",
+        createdAt: new Date(),
+      };
+
+      // Add to Firestore
+      // Create document reference
+      const docRef = doc(db, "products", formData.productID);
+
+// Add to Firestore
+      await setDoc(docRef, productData);
+
+      // Reset form
+      setFormData({
+        productName: "",
+        categories: [],
+        size: "",
+        regularPrice: "",
+        productID: "",
+        price: "",
+        description: "",
+        photoUrl: "https://d2v5dzhdg4zhx3.cloudfront.net/web-assets/images/storypages/primary/ProductShowcasesampleimages/JPEG/Product+Showcase-1.jpg",
+      });
+      
+      // Clear file input
+      fileInputRef.current.value = "";
+      alert("Product added successfully!");
+    } catch (err) {
+      setError(err.message || "Failed to add product. Please try again.");
+      console.error("Error adding product:", err);
+    }
   };
+
+  // Loading and remaining JSX remains the same as original
+  // ... (keep all the existing JSX code below this point)`
 
   if (isLoading) {
     return (
