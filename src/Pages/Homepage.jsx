@@ -9,11 +9,12 @@ import { reloadCartLocal } from "../Components/Header"
 import { Link, useSearchParams } from "react-router-dom"
 
 const Homepage = () => {
+  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState({})
+  const [categoryFilter, setCategoryFilter] = useState(null)
 
   const [searchParams] = useSearchParams()
-  const categoryFilter = searchParams.get("category")
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -25,25 +26,61 @@ const Homepage = () => {
           ...doc.data(),
         }))
 
-        // Filter products by category if categoryFilter exists
-        const filteredProducts = categoryFilter
-          ? productsData.filter((product) =>
-              product.categories.some((cat) => cat.toLowerCase() === categoryFilter.toLowerCase()),
-            )
-          : productsData
+        const categoryFilterParam = searchParams.get("category")
+        const productQuery = searchParams.get("product")
+
+        let filteredProducts = productsData
+
+        // Filter by product search query
+        if (productQuery) {
+          const decodedQuery = decodeURIComponent(productQuery).toLowerCase()
+          filteredProducts = productsData.filter(
+            (product) =>
+              product.productName.toLowerCase().includes(decodedQuery) ||
+              product.description.toLowerCase().includes(decodedQuery),
+          )
+        }
+        // Filter by category
+        else if (categoryFilterParam) {
+          filteredProducts = productsData.filter((product) =>
+            product.categories.some((cat) => cat.toLowerCase() === categoryFilterParam.toLowerCase()),
+          )
+        }
 
         // Group products by category
         const groupedCategories = filteredProducts.reduce((acc, product) => {
-          product.categories.forEach((category) => {
-            if (!acc[category]) {
-              acc[category] = []
+          if (categoryFilterParam) {
+            // When filtering by category, only show that specific category
+            const matchingCategory = product.categories.find(
+              (cat) => cat.toLowerCase() === categoryFilterParam.toLowerCase(),
+            )
+            if (matchingCategory && !acc[matchingCategory]) {
+              acc[matchingCategory] = []
             }
-            acc[category].push(product)
-          })
+            if (matchingCategory) {
+              acc[matchingCategory].push(product)
+            }
+          } else if (productQuery) {
+            // When searching products, group them under "Search Results"
+            if (!acc["Search Results"]) {
+              acc["Search Results"] = []
+            }
+            acc["Search Results"].push(product)
+          } else {
+            // When not filtering, show all categories
+            product.categories.forEach((category) => {
+              if (!acc[category]) {
+                acc[category] = []
+              }
+              acc[category].push(product)
+            })
+          }
           return acc
         }, {})
 
+        setProducts(filteredProducts)
         setCategories(groupedCategories)
+        setCategoryFilter(categoryFilterParam)
         console.log("Products grouped by category:", groupedCategories)
       } catch (error) {
         console.error("Error fetching products:", error)
@@ -53,7 +90,7 @@ const Homepage = () => {
     }
 
     fetchProducts()
-  }, [categoryFilter])
+  }, [searchParams])
 
   const handleAddToCart = (product) => {
     const existingCart = JSON.parse(localStorage.getItem("cart")) || []
@@ -76,17 +113,34 @@ const Homepage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <HeroSlideshow />
-      {categoryFilter && (
+      {!categoryFilter && !searchParams.get("product") && <HeroSlideshow />}
+      {(categoryFilter || searchParams.get("product")) && (
         <div className="container mx-auto px-6 py-8">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)} Products
-            </h1>
-            <div className="w-20 h-1 bg-orange-400 mx-auto mb-4"></div>
-            <Link to="/" className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
-              ← View All Products
-            </Link>
+            {categoryFilter ? (
+              <>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  {categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)} Products
+                </h1>
+                <div className="w-20 h-1 bg-orange-400 mx-auto mb-4"></div>
+                <Link to="/" className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
+                  ← View All Products
+                </Link>
+              </>
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Search Results for "{decodeURIComponent(searchParams.get("product"))}"
+                </h1>
+                <div className="w-20 h-1 bg-orange-400 mx-auto mb-4"></div>
+                <p className="text-gray-600 mb-4">
+                  Found {products.length} product{products.length !== 1 ? "s" : ""} matching your search
+                </p>
+                <Link to="/" className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
+                  ← Back to Homepage
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -111,12 +165,14 @@ const Homepage = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-1">{category}</h2>
                   <div className="w-12 h-0.5 bg-orange-400"></div>
                 </div>
-                <Link
-                  to={`/category/${category.toLowerCase()}`}
-                  className="text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors"
-                >
-                  View All →
-                </Link>
+                {!searchParams.get("product") && (
+                  <Link
+                    to={`/category/${category.toLowerCase()}`}
+                    className="text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors"
+                  >
+                    View All →
+                  </Link>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { PlusCircle, ShoppingCart, Upload, Filter, Eye, EyeOff } from "lucide-react"
 import { db } from "../firebase"
@@ -8,7 +10,6 @@ import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "react-toastify"
-import "../CSS/admin-style.css"
 
 const OrdersTab = () => {
   const [orders, setOrders] = useState([])
@@ -253,7 +254,8 @@ const Admin = () => {
   const [formData, setFormData] = useState({
     productName: "",
     categories: [],
-    size: "",
+    sizeNumber: "",
+    sizeUnit: "gm",
     regularPrice: "",
     productID: "",
     price: "",
@@ -299,7 +301,8 @@ const Admin = () => {
     if (
       !formData.productName ||
       !formData.categories.length ||
-      !formData.size ||
+      !formData.sizeNumber ||
+      !formData.sizeUnit ||
       !formData.regularPrice ||
       !formData.productID ||
       !formData.price ||
@@ -325,7 +328,7 @@ const Admin = () => {
       const productData = {
         productName: formData.productName,
         categories: formData.categories,
-        size: formData.size,
+        size: `${formData.sizeNumber}${formData.sizeUnit}`, // Combine number and unit
         regularPrice: Number.parseFloat(formData.regularPrice),
         productID: formData.productID,
         price: Number.parseFloat(formData.price),
@@ -342,7 +345,8 @@ const Admin = () => {
       setFormData({
         productName: "",
         categories: [],
-        size: "",
+        sizeNumber: "",
+        sizeUnit: "gm",
         regularPrice: "",
         productID: "",
         price: "",
@@ -485,23 +489,37 @@ const Admin = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* Size Field */}
                 <div>
                   <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-2">
-                    Size
+                    Size/Weight/Volume
                   </label>
-                  <select
-                    id="size"
-                    name="size"
-                    value={formData.size}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Select Size</option>
-                    <option value="S">Small (S)</option>
-                    <option value="M">Medium (M)</option>
-                    <option value="L">Large (L)</option>
-                  </select>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      name="sizeNumber"
+                      placeholder="Amount"
+                      value={formData.sizeNumber || ""}
+                      onChange={(e) => setFormData({ ...formData, sizeNumber: e.target.value })}
+                      className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      min="0"
+                      step="0.1"
+                    />
+                    <select
+                      name="sizeUnit"
+                      value={formData.sizeUnit || "gm"}
+                      onChange={(e) => setFormData({ ...formData, sizeUnit: e.target.value })}
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value="gm">Grams (gm)</option>
+                      <option value="ml">Milliliters (ml)</option>
+                      <option value="liter">Liters (liter)</option>
+                      <option value="kg">Kilograms (kg)</option>
+                      <option value="oz">Ounces (oz)</option>
+                      <option value="fl">Fluid Ounces (fl)</option>
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Enter the product size/weight/volume</p>
                 </div>
 
                 <div>

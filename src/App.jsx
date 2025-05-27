@@ -21,6 +21,8 @@ import Admin from './Pages/Admin'
 import Product from './Pages/Product'
 import ProtectedRoute from './Middlewares/ProtectedRoute'
 import NotAuthorized from './Pages/NotAuthorized'
+import Team from './Pages/Team'
+import ComingSoon from './Pages/ComingSoon'
 
 const App = () => {
   return (
@@ -39,6 +41,7 @@ const App = () => {
         </Route>
 
         <Route path="/mission" element={<Mission />} />
+        <Route path="/team" element={<Team />} />
         <Route path="/refund" element={<Refund />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
@@ -47,6 +50,11 @@ const App = () => {
         <Route path="/faqs" element={<FAQ />} />
         <Route path="/story" element={<Story />} />
         <Route path='/product/:id' element={<Product />} />
+
+        {/* coming soon */}
+        <Route path="/blog" element={<ComingSoon />} />
+        <Route path="/brands" element={<ComingSoon />} />
+
 
         <Route element={<ProtectedRoute requiredRole="admin" />}>
           <Route path="/admin" element={<Admin />} />
