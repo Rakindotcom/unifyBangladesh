@@ -17,6 +17,7 @@ const Homepage = () => {
           ...doc.data()
         }));
         setProducts(productsData);
+        console.log('Fetched products:', productsData);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -48,7 +49,7 @@ const Homepage = () => {
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
+                  <h3 className="font-semibold text-lg mb-2">{product.productName}</h3>
                   <p className="text-gray-600 mb-3 line-clamp-2">{product.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-lg">${product.price}</span>
