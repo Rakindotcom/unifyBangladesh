@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin } from "lucide-react"
 import { Link } from "react-router-dom"
 
@@ -15,42 +15,51 @@ const categories = [
   "Face Mask",
 ]
 
-// Example cart items
-const exampleCartItems = [
-  {
-    id: 1,
-    name: "Vitamin C Serum",
-    brand: "SkinPlus",
-    price: 1250,
-    quantity: 2,
-    image: "/placeholder.svg?height=60&width=60",
-  },
-  {
-    id: 2,
-    name: "Moisturizing Cream",
-    brand: "GlowCare",
-    price: 850,
-    quantity: 1,
-    image: "/placeholder.svg?height=60&width=60",
-  },
-  {
-    id: 3,
-    name: "Face Wash Gel",
-    brand: "PureSkin",
-    price: 450,
-    quantity: 3,
-    image: "/placeholder.svg?height=60&width=60",
-  },
-]
+// // Example cart items
+// const exampleCartItems = [
+//   {
+//     id: 1,
+//     name: "Vitamin C Serum",
+//     brand: "SkinPlus",
+//     price: 1250,
+//     quantity: 2,
+//     image: "/placeholder.svg?height=60&width=60",
+//   },
+//   {
+//     id: 2,
+//     name: "Moisturizing Cream",
+//     brand: "GlowCare",
+//     price: 850,
+//     quantity: 1,
+//     image: "/placeholder.svg?height=60&width=60",
+//   },
+//   {
+//     id: 3,
+//     name: "Face Wash Gel",
+//     brand: "PureSkin",
+//     price: 450,
+//     quantity: 3,
+//     image: "/placeholder.svg?height=60&width=60",
+//   },
+// ]
 
-const Header = () => {
+let reloadCartLocal;
+export { reloadCartLocal };
+
+const Header = ( ) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchActive, setIsSearchActive] = useState(false)
-  const [cartItems, setCartItems] = useState(exampleCartItems)
-  const [deliveryLocation, setDeliveryLocation] = useState("inside") // 'inside' or 'outside'
+  const [cartItems, setCartItems] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedCart = localStorage.getItem('cart')
+      return savedCart ? JSON.parse(savedCart) : []
+    }
+    return []
+  })
+  const [deliveryLocation, setDeliveryLocation] = useState("inside")
 
   const handleSearchToggle = () => {
     setIsSearchActive(!isSearchActive)
@@ -59,22 +68,42 @@ const Header = () => {
     }
   }
 
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity <= 0) {
-      setCartItems(cartItems.filter((item) => item.id !== id))
-    } else {
-      setCartItems(cartItems.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item)))
+  // Sync cart with localStorage when cart opens
+  useEffect(() => {
+    if (cartOpen) {
+      const savedCart = localStorage.getItem('cart')
+      if (savedCart) setCartItems(JSON.parse(savedCart))
     }
+  }, [cartOpen])
+
+  const updateQuantity = (id, newQuantity) => {
+    setCartItems(prevItems => {
+      const updatedItems = prevItems.map(item =>
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      ).filter(item => item.quantity > 0)
+      localStorage.setItem('cart', JSON.stringify(updatedItems))
+      return updatedItems
+    })
   }
 
   const removeItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id))
+    setCartItems(prevItems => {
+      const updatedItems = prevItems.filter(item => item.id !== id)
+      localStorage.setItem('cart', JSON.stringify(updatedItems))
+      return updatedItems
+    })
+  }
+
+  reloadCartLocal = () => {
+    const savedCart = localStorage.getItem('cart')
+    if (savedCart) setCartItems(JSON.parse(savedCart))
   }
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const deliveryCharge = deliveryLocation === "inside" ? 70 : 120
   const total = subtotal + deliveryCharge
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+
 
   return (
     <header className="bg-white shadow-md relative z-50">
@@ -188,9 +217,9 @@ const Header = () => {
       {/* Cart Sidebar */}
       {cartOpen && (
         <div className="fixed inset-0 z-50 bg-black/40">
-          <div className="absolute right-0 top-0 w-80 h-full bg-white shadow-lg flex flex-col">
+          <div className="absolute right-0 top-0 w-96 h-full bg-white shadow-lg flex flex-col">
             {/* Cart Header */}
-            <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-[#800000] to-[#a00000] text-white">
+            <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-orange-400 to-orange-500 text-white">
               <h2 className="text-lg font-semibold">Shopping Cart ({totalItems})</h2>
               <button onClick={() => setCartOpen(false)}>
                 <X className="w-5 h-5 hover:text-gray-200" />
@@ -200,27 +229,25 @@ const Header = () => {
             {/* Delivery Location Selector */}
             <div className="p-4 bg-gray-50 border-b">
               <div className="flex items-center gap-2 mb-2">
-                <MapPin className="w-4 h-4 text-[#800000]" />
+                <MapPin className="w-4 h-4 text-orange-500" />
                 <span className="text-sm font-medium text-gray-700">Delivery Location</span>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setDeliveryLocation("inside")}
-                  className={`px-3 py-1.5 text-xs rounded-full border transition ${
-                    deliveryLocation === "inside"
-                      ? "bg-[#800000] text-white border-[#800000]"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-[#800000]"
-                  }`}
+                  className={`px-3 py-1.5 text-xs rounded-full border transition ${deliveryLocation === "inside"
+                      ? "bg-orange-400 text-white border-orange-400"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                    }`}
                 >
                   Inside Dhaka (৳70)
                 </button>
                 <button
                   onClick={() => setDeliveryLocation("outside")}
-                  className={`px-3 py-1.5 text-xs rounded-full border transition ${
-                    deliveryLocation === "outside"
-                      ? "bg-[#800000] text-white border-[#800000]"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-[#800000]"
-                  }`}
+                  className={`px-3 py-1.5 text-xs rounded-full border transition ${deliveryLocation === "outside"
+                      ? "bg-orange-400 text-white border-orange-400"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                    }`}
                 >
                   Outside Dhaka (৳120)
                 </button>
@@ -239,15 +266,14 @@ const Header = () => {
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex gap-3 p-3 border rounded-lg bg-gray-50">
                       <img
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.name}
+                        src={item.photoUrl || "/placeholder.svg"}
+                        alt={item.productName}
                         className="w-16 h-16 object-cover rounded-md"
                       />
                       <div className="flex-1">
-                        <h4 className="font-medium text-sm text-gray-800">{item.name}</h4>
-                        <p className="text-xs text-gray-500">{item.brand}</p>
-                        <p className="text-sm font-semibold text-[#800000]">৳{item.price}</p>
-
+                        <h4 className="font-medium text-sm text-gray-800">{item.productName}</h4>
+                        <p className="text-xs text-gray-500">{item.size}</p>
+                        <p className="text-sm font-semibold text-orange-500">৳{item.price}</p>
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-2">
                             <button
@@ -292,11 +318,11 @@ const Header = () => {
                   </div>
                   <div className="flex justify-between font-semibold text-base border-t pt-2">
                     <span>Total:</span>
-                    <span className="text-[#800000]">৳{total}</span>
+                    <span className="text-orange-500">৳{total}</span>
                   </div>
                 </div>
 
-                <button className="w-full mt-4 bg-[#800000] text-white py-3 rounded-lg font-medium hover:bg-[#660000] transition">
+                <button className="w-full mt-4 bg-orange-400 text-white py-3 rounded-lg font-medium hover:bg-orange-500 transition">
                   Proceed to Checkout
                 </button>
               </div>
@@ -333,9 +359,8 @@ const Header = () => {
 
       {/* Desktop Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-white via-rose-50 to-pink-100 shadow-2xl p-5 transition-transform duration-300 z-50 overflow-y-auto ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-white via-rose-50 to-pink-100 shadow-2xl p-5 transition-transform duration-300 z-50 overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[#800000]">Categories</h2>

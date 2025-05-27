@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import HeroSlideshow from '../Components/HeroSlideshow';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import { toast } from 'react-toastify';
+import { reloadCartLocal } from '../Components/Header';
 
 const Homepage = () => {
   const [products, setProducts] = useState([]);
@@ -17,7 +19,7 @@ const Homepage = () => {
           ...doc.data()
         }));
         setProducts(productsData);
-        console.log('Fetched products:', productsData);
+        console.log('Products fetched:', productsData);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -27,6 +29,27 @@ const Homepage = () => {
 
     fetchProducts();
   }, []);
+
+  const handleAddToCart = (product) => {
+    const existingCart = JSON.parse(localStorage.getItem('cart')) || [];
+    const existingProductIndex = existingCart.findIndex(item => item.id === product.id);
+
+    if (existingProductIndex !== -1) {
+      // Product exists, update quantity
+      existingCart[existingProductIndex].quantity += 1;
+    } else {
+      // Add new product with quantity 1
+      existingCart.push({ ...product, quantity: 1 });
+    }
+
+    localStorage.setItem('cart', JSON.stringify(existingCart));
+    // Optional: You could add a toast notification here
+    toast.success('Product added to cart!');
+
+    //rerender the cart or update UI as needed
+    reloadCartLocal();
+  };
+
 
   return (
     <>
@@ -52,8 +75,11 @@ const Homepage = () => {
                   <h3 className="font-semibold text-lg mb-2">{product.productName}</h3>
                   <p className="text-gray-600 mb-3 line-clamp-2">{product.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-lg">${product.price}</span>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                    <span className="font-bold text-lg">BDT {product.price}</span>
+                    <button 
+                      onClick={() => handleAddToCart(product)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                    >
                       Add to Cart
                     </button>
                   </div>
