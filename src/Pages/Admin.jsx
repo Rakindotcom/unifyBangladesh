@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { PlusCircle, ShoppingCart } from "lucide-react";
 import { db } from "../firebase";
 import {setDoc ,doc} from "firebase/firestore";
+import axios from "axios";
 
 const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +19,6 @@ const Admin = () => {
   });
   const [error, setError] = useState("");
   const [orders] = useState([]);
-  const fileInputRef = useRef(null);
 
   // Simulate loading (replace with auth check later)
   useEffect(() => {
@@ -65,8 +65,8 @@ const Admin = () => {
       !formData.regularPrice ||
       !formData.productID ||
       !formData.price ||
-      !formData.description 
-      //||!formData.photo
+      !formData.description ||
+      !formData.photo
     ) {
       console.log("Validation failed: All fields are required");
       setError("All fields are required");
@@ -97,6 +97,12 @@ const Admin = () => {
       // const photoURL = await getDownloadURL(uploadTask.ref);
 
       // Create product data object
+      const imageFormData = new FormData();
+      imageFormData.append("file", formData.photo);
+      imageFormData.append("upload_preset", "unify-bangladesh");
+      const res = await axios.post("https://api.cloudinary.com/v1_1/djx4fqoay/image/upload", imageFormData);
+      const imageUrl = res.data.secure_url;
+
       const productData = {
         productName: formData.productName,
         categories: formData.categories,
@@ -105,7 +111,7 @@ const Admin = () => {
         productID: formData.productID,
         price: parseFloat(formData.price),
         description: formData.description,
-        photoUrl: "https://d2v5dzhdg4zhx3.cloudfront.net/web-assets/images/storypages/primary/ProductShowcasesampleimages/JPEG/Product+Showcase-1.jpg",
+        photoUrl: imageUrl,
         createdAt: new Date(),
       };
 
@@ -115,8 +121,7 @@ const Admin = () => {
 
 // Add to Firestore
       await setDoc(docRef, productData);
-
-      // Reset form
+      console.log("Product added successfully:", productData);
       setFormData({
         productName: "",
         categories: [],
@@ -129,7 +134,7 @@ const Admin = () => {
       });
       
       // Clear file input
-      fileInputRef.current.value = "";
+     // fileInputRef.current.value = "";
       alert("Product added successfully!");
     } catch (err) {
       setError(err.message || "Failed to add product. Please try again.");
