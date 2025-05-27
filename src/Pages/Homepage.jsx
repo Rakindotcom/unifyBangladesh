@@ -9,6 +9,7 @@ import { reloadCartLocal } from "../Components/Header"
 import { Link, useSearchParams } from "react-router-dom"
 
 const Homepage = () => {
+  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState({})
 
@@ -34,15 +35,30 @@ const Homepage = () => {
 
         // Group products by category
         const groupedCategories = filteredProducts.reduce((acc, product) => {
-          product.categories.forEach((category) => {
-            if (!acc[category]) {
-              acc[category] = []
+          if (categoryFilter) {
+            // When filtering by category, only show that specific category
+            const matchingCategory = product.categories.find(
+              (cat) => cat.toLowerCase() === categoryFilter.toLowerCase(),
+            )
+            if (matchingCategory && !acc[matchingCategory]) {
+              acc[matchingCategory] = []
             }
-            acc[category].push(product)
-          })
+            if (matchingCategory) {
+              acc[matchingCategory].push(product)
+            }
+          } else {
+            // When not filtering, show all categories
+            product.categories.forEach((category) => {
+              if (!acc[category]) {
+                acc[category] = []
+              }
+              acc[category].push(product)
+            })
+          }
           return acc
         }, {})
 
+        setProducts(filteredProducts)
         setCategories(groupedCategories)
         console.log("Products grouped by category:", groupedCategories)
       } catch (error) {
@@ -76,7 +92,7 @@ const Homepage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <HeroSlideshow />
+      {!categoryFilter && <HeroSlideshow />}
       {categoryFilter && (
         <div className="container mx-auto px-6 py-8">
           <div className="text-center">
