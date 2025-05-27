@@ -1,30 +1,36 @@
 import { useState, useEffect } from "react"
-import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin, User, LogOut } from "lucide-react"
+import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin, User, LogOut, Heart, ChevronDown } from "lucide-react"
 import { Link } from "react-router-dom"
 import { db, auth } from "../firebase"
 import { signOut } from "firebase/auth"
 import { collection, addDoc, doc, getDoc } from "firebase/firestore"
-
-// Add these new imports at the top
 import { onAuthStateChanged } from "firebase/auth"
-import Modal from 'react-modal'
+import Modal from "react-modal"
 import { toast } from "react-toastify"
+import "../CSS/Header.css"
 
-// Add modal styles
-Modal.setAppElement('#root')
+// Modal setup
+Modal.setAppElement("#root")
 const customStyles = {
   content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)',
-    maxWidth: '500px',
-    width: '90%',
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+    maxWidth: "500px",
+    width: "90%",
+    border: "none",
+    borderRadius: "16px",
+    padding: "0",
+    overflow: "hidden",
+  },
+  overlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backdropFilter: "blur(4px)",
   },
 }
-
 
 const categories = [
   "Cream & Moisturizers",
@@ -46,36 +52,8 @@ const categories = [
   "Tools & Accessories",
 ]
 
-// // Example cart items
-// const exampleCartItems = [
-//   {
-//     id: 1,
-//     name: "Vitamin C Serum",
-//     brand: "SkinPlus",
-//     price: 1250,
-//     quantity: 2,
-//     image: "/placeholder.svg?height=60&width=60",
-//   },
-//   {
-//     id: 2,
-//     name: "Moisturizing Cream",
-//     brand: "GlowCare",
-//     price: 850,
-//     quantity: 1,
-//     image: "/placeholder.svg?height=60&width=60",
-//   },
-//   {
-//     id: 3,
-//     name: "Face Wash Gel",
-//     brand: "PureSkin",
-//     price: 450,
-//     quantity: 3,
-//     image: "/placeholder.svg?height=60&width=60",
-//   },
-// ]
-
-let reloadCartLocal;
-export { reloadCartLocal };
+let reloadCartLocal
+export { reloadCartLocal }
 
 const Header = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -84,24 +62,23 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchActive, setIsSearchActive] = useState(false)
   const [cartItems, setCartItems] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedCart = localStorage.getItem('cart')
+    if (typeof window !== "undefined") {
+      const savedCart = localStorage.getItem("cart")
       return savedCart ? JSON.parse(savedCart) : []
     }
     return []
   })
   const [deliveryLocation, setDeliveryLocation] = useState("inside")
-
-  // Add new states
   const [showCheckout, setShowCheckout] = useState(false)
   const [userDetails, setUserDetails] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: ''
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
   })
   const [currentUser, setCurrentUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const handleSearchToggle = () => {
     setIsSearchActive(!isSearchActive)
@@ -110,34 +87,33 @@ const Header = () => {
     }
   }
 
-  // Sync cart with localStorage when cart opens
   useEffect(() => {
     if (cartOpen) {
-      const savedCart = localStorage.getItem('cart')
+      const savedCart = localStorage.getItem("cart")
       if (savedCart) setCartItems(JSON.parse(savedCart))
     }
   }, [cartOpen])
 
   const updateQuantity = (id, newQuantity) => {
-    setCartItems(prevItems => {
-      const updatedItems = prevItems.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      ).filter(item => item.quantity > 0)
-      localStorage.setItem('cart', JSON.stringify(updatedItems))
+    setCartItems((prevItems) => {
+      const updatedItems = prevItems
+        .map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item))
+        .filter((item) => item.quantity > 0)
+      localStorage.setItem("cart", JSON.stringify(updatedItems))
       return updatedItems
     })
   }
 
   const removeItem = (id) => {
-    setCartItems(prevItems => {
-      const updatedItems = prevItems.filter(item => item.id !== id)
-      localStorage.setItem('cart', JSON.stringify(updatedItems))
+    setCartItems((prevItems) => {
+      const updatedItems = prevItems.filter((item) => item.id !== id)
+      localStorage.setItem("cart", JSON.stringify(updatedItems))
       return updatedItems
     })
   }
 
   reloadCartLocal = () => {
-    const savedCart = localStorage.getItem('cart')
+    const savedCart = localStorage.getItem("cart")
     if (savedCart) setCartItems(JSON.parse(savedCart))
   }
 
@@ -146,20 +122,17 @@ const Header = () => {
   const total = subtotal + deliveryCharge
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
-
-  // Add auth state listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user)
       if (user) {
-        // Fetch user details from Firestore
         const userDoc = await getDoc(doc(db, "Users", user.uid))
         if (userDoc.exists()) {
           setUserDetails({
-            name: userDoc.data().name || '',
-            email: userDoc.data().email || '',
-            phone: userDoc.data().mobile || '',
-            address: userDoc.data().address || ''
+            name: userDoc.data().name || "",
+            email: userDoc.data().email || "",
+            phone: userDoc.data().mobile || "",
+            address: userDoc.data().address || "",
           })
         }
       }
@@ -167,285 +140,433 @@ const Header = () => {
     })
     return () => unsubscribe()
   }, [])
-  // Add checkout handler
+
   const handleCheckout = async () => {
     setShowCheckout(true)
     setCartOpen(false)
   }
 
-  // Add order submission handler
   const submitOrder = async (e) => {
     e.preventDefault()
     try {
       const orderData = {
-        user: currentUser ? {
-          uid: currentUser.uid,
-          ...userDetails
-        } : userDetails,
+        user: currentUser
+          ? {
+              uid: currentUser.uid,
+              ...userDetails,
+            }
+          : userDetails,
         items: cartItems,
         subtotal,
         deliveryCharge,
         total,
         deliveryLocation,
-        status: 'pending',
-        createdAt: new Date()
+        status: "pending",
+        createdAt: new Date(),
       }
 
-      // Add order to Firestore
       const docRef = await addDoc(collection(db, "orders"), orderData)
       console.log("Order submitted with ID: ", docRef.id)
 
-      // Clear cart
-      localStorage.removeItem('cart')
+      localStorage.removeItem("cart")
       setCartItems([])
       setCartOpen(false)
       setShowCheckout(false)
-      alert('Order placed successfully!')
+      toast.success("Order placed successfully!")
     } catch (error) {
       console.error("Error submitting order: ", error)
-      alert('Error placing order. Please try again.')
+      toast.error("Error placing order. Please try again.")
     }
   }
 
   const onLogout = async () => {
     try {
       await signOut(auth)
-      toast.success('Logged out successfully!')
+      setUserMenuOpen(false)
+      toast.success("Logged out successfully!")
     } catch (error) {
       console.error("Error logging out: ", error)
-      toast.error('Error logging out. Please try again.')
+      toast.error("Error logging out. Please try again.")
     }
   }
 
-
-  // Add checkout modal component
   const CheckoutModal = () => (
-    <Modal
-      isOpen={showCheckout}
-      onRequestClose={() => setShowCheckout(false)}
-      style={customStyles}
-    >
-      <div className="p-4">
-        <h2 className="text-xl font-bold mb-4">Checkout Details</h2>
-        <form onSubmit={submitOrder} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium">Full Name</label>
-            <input
-              type="text"
-              required
-              value={userDetails.name}
-              onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium">Email</label>
-            <input
-              type="email"
-              required
-              value={userDetails.email}
-              onChange={(e) => setUserDetails({ ...userDetails, email: e.target.value })}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium">Phone Number</label>
-            <input
-              type="tel"
-              required
-              value={userDetails.phone}
-              onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium">Billing Address</label>
-            <textarea
-              required
-              value={userDetails.address}
-              onChange={(e) => setUserDetails({ ...userDetails, address: e.target.value })}
-              className="w-full p-2 border rounded"
-              rows="3"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setShowCheckout(false)}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[#800000] text-white rounded hover:bg-[#660000]"
-            >
-              {loadingUser ? 'Loading...' : 'Confirm Order'}
+    <Modal isOpen={showCheckout} onRequestClose={() => setShowCheckout(false)} style={customStyles}>
+      <div className="bg-white">
+        {/* Modal Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Complete Your Order</h2>
+            <button onClick={() => setShowCheckout(false)} className="text-white hover:text-gray-200 transition-colors">
+              <X className="w-5 h-5" />
             </button>
           </div>
-        </form>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6">
+          <form onSubmit={submitOrder} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={userDetails.name}
+                  onChange={(e) => setUserDetails({ ...userDetails, name: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={userDetails.email}
+                  onChange={(e) => setUserDetails({ ...userDetails, email: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  placeholder="Enter your email"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <input
+                type="tel"
+                required
+                value={userDetails.phone}
+                onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                placeholder="Enter your phone number"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
+              <textarea
+                required
+                value={userDetails.address}
+                onChange={(e) => setUserDetails({ ...userDetails, address: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                rows="3"
+                placeholder="Enter your complete delivery address"
+              />
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-gray-50 rounded-lg p-4 mt-6">
+              <h3 className="font-medium text-gray-900 mb-3">Order Summary</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Subtotal ({totalItems} items):</span>
+                  <span>৳{subtotal}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Delivery Charge:</span>
+                  <span>৳{deliveryCharge}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-base border-t pt-2">
+                  <span>Total:</span>
+                  <span className="text-orange-500">৳{total}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowCheckout(false)}
+                className="flex-1 px-4 py-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+              >
+                {loadingUser ? "Loading..." : "Confirm Order"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </Modal>
   )
 
-
   return (
-    <header className="bg-white shadow-md relative z-50">
+    <header className="bg-orange-50 shadow-sm border-b border-gray-200 sticky top-0 z-50">
       {/* Mobile Search Mode */}
       {isSearchActive && (
-        <div className="md:hidden max-w-full mx-auto px-4 py-3 flex items-center justify-between bg-white shadow-md">
-          <button onClick={handleSearchToggle} className="text-gray-500 w-6 h-6 cursor-pointer">
-            <X className="w-6 h-6" />
-          </button>
-          <div className="flex-1 mx-2 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search For Products, Brands and Categories"
-              className="w-full pl-9 pr-3 py-1.5 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
-            />
+        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <button onClick={handleSearchToggle} className="text-gray-500">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                autoFocus
+              />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Default Header */}
+      {/* Main Header */}
       <div
-        className={`max-w-7xl mx-auto px-4 py-3 flex items-center justify-between ${isSearchActive ? "hidden md:flex" : "flex"}`}
+        className={`max-w-7xl mx-auto px-4 py-3 ${isSearchActive ? "hidden md:flex" : "flex"} items-center justify-between`}
       >
         {/* Logo */}
         <Link to="/" className="flex-shrink-0">
-          <img src="/unifylogo.png" alt="SkinPlus Logo" className="h-13 mb-2 w-auto" />
+          <img src="/unifylogo.png" alt="SkinPlus Logo" className="h-12 w-auto" />
         </Link>
 
-        {/* Search Icon for Mobile */}
-        <div className="md:hidden ml-auto mr-3">
-          <button onClick={() => setIsSearchActive(true)}>
-            <Search className="text-gray-500 w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Search Bar for Desktop */}
-        <div className="hidden md:block flex-1 mx-6 max-w-md relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search For Products, Brands and Categories"
-            className="w-full pl-9 pr-3 py-1.5 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]"
-          />
-        </div>
-
-        {/* Right Icons */}
-        <div className="flex items-center gap-5">
-          <div className="relative cursor-pointer" onClick={() => setCartOpen(true)}>
-            <ShoppingCart className="text-[#800000] w-6 h-6" />
-            <span className="absolute -top-2 -right-2 bg-[#800000] text-white text-xs font-semibold rounded-full px-1.5">
-              {totalItems}
-            </span>
+        {/* Desktop Search */}
+        <div className="hidden md:block flex-1 mx-8 max-w-xl">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for products, brands and categories..."
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all hover:border-gray-400"
+            />
           </div>
+        </div>
 
-          {!currentUser&&<Link to="/login">
-            <button className="px-3 py-1.5 text-sm font-medium text-white bg-[#800000] rounded-full hover:bg-[#660000] transition">
-              Login
-            </button>
-          </Link>}
+        {/* Right Section */}
+        <div className="flex items-center gap-4">
+          {/* Mobile Search Button */}
+          <button
+            onClick={handleSearchToggle}
+            className="md:hidden text-gray-600 hover:text-orange-500 transition-colors"
+          >
+            <Search className="w-6 h-6" />
+          </button>
 
-          {currentUser && (
-            <div className="flex flex-row items-center gap-5">
-              <User className="text-[#800000] w-6 h-6 cursor-pointer" />
-              <h2 className="text-[#800000] font-semibold hidden md:block">{userDetails.name ? userDetails.name.split(" ").slice(0, 2).join(" ") : "User"}</h2>
-              <button onClick={onLogout} className="text-[#800000] hover:text-red-600 transition">
-                <LogOut className="text-[#800000] w-6 h-6 cursor-pointer" />
+          {/* Wishlist */}
+          <button className="hidden md:flex text-gray-600 hover:text-orange-500 transition-colors">
+            <Heart className="w-6 h-6" />
+          </button>
+
+          {/* Cart */}
+          <button
+            onClick={() => setCartOpen(true)}
+            className="relative text-gray-600 hover:text-orange-500 transition-colors"
+          >
+            <ShoppingCart className="w-6 h-6" />
+            {totalItems > 0 && (
+              <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
+          </button>
+
+          {/* User Section */}
+          {!currentUser ? (
+            <Link to="/login">
+              <button className="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors">
+                Sign In
               </button>
+            </Link>
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 text-gray-700 hover:text-orange-500 transition-colors"
+              >
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-orange-600" />
+                </div>
+                <span className="hidden md:block font-medium">
+                  {userDetails.name ? userDetails.name.split(" ")[0] : "User"}
+                </span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+
+              {/* User Dropdown */}
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <Link
+                    to="/profile"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    My Profile
+                  </Link>
+                  <button
+                    onClick={onLogout}
+                    className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
-          <button className="md:hidden" onClick={() => setMobileMenuOpen(true)}>
-            <Menu className="w-5 h-5 text-gray-700" />
+          {/* Mobile Menu Button */}
+          <button onClick={() => setMobileMenuOpen(true)} className="md:hidden text-gray-600">
+            <Menu className="w-6 h-6" />
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Desktop Navigation */}
+      <div className="hidden md:block bg-orange-500">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between">
+            {/* Categories Button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex items-center gap-2 text-white hover:bg-orange-600 px-4 py-3 rounded-lg transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+              <span className="font-medium">All Categories</span>
+            </button>
+
+            {/* Navigation Links */}
+            <nav className="flex items-center space-x-8">
+              {["Home", "Brands", "Blog"].map((item) => (
+                <Link
+                  key={item}
+                  to={`/${item.toLowerCase()}`}
+                  className="text-white hover:text-orange-100 font-medium py-3 transition-colors"
+                >
+                  {item}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40">
-          <div className="absolute right-0 top-0 w-64 h-full bg-white shadow-lg p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-[#800000]">Menu</h2>
-              <button onClick={() => setMobileMenuOpen(false)}>
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 bg-black/50">
+          <div className="absolute right-0 top-0 w-80 h-full bg-white shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+              <button onClick={() => setMobileMenuOpen(false)} className="text-gray-500">
+                <X className="w-6 h-6" />
               </button>
             </div>
-            <ul className="space-y-3">
-              {["Home", "Brands", "Blog"].map((item, i) => (
-                <li key={i}>
+
+            <div className="p-4 space-y-4">
+              {/* Navigation Links */}
+              <div className="space-y-2">
+                {["Home", "Brands", "Blog"].map((item) => (
                   <Link
+                    key={item}
                     to={`/${item.toLowerCase()}`}
-                    className="block px-3 py-2 rounded-lg border border-gray-200 shadow-sm hover:bg-[#fef3f2] hover:text-[#800000] transition"
                     onClick={() => setMobileMenuOpen(false)}
+                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
                   >
                     {item}
                   </Link>
-                </li>
-              ))}
-              <li className="pt-4 font-semibold text-[#800000]">Categories</li>
-              {categories.map((cat, i) => (
-                <li key={i}>
+                ))}
+              </div>
+
+              {/* Categories */}
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Categories</h3>
+                <div className="space-y-1 max-h-64 overflow-y-auto">
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat}
+                      to={`?category=${encodeURIComponent(cat)}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
+                    >
+                      {cat}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Categories Sidebar */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50">
+          <div className="absolute left-0 top-0 w-80 h-full bg-white shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-orange-50">
+              <h2 className="text-lg font-semibold text-gray-900">All Categories</h2>
+              <button onClick={() => setSidebarOpen(false)} className="text-gray-500">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto h-full">
+              <div className="space-y-2">
+                {categories.map((cat) => (
                   <Link
+                    key={cat}
                     to={`?category=${encodeURIComponent(cat)}`}
-                    className="block px-3 py-2 rounded-lg border border-gray-200 shadow-sm hover:bg-[#fef3f2] hover:text-[#800000] transition"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={() => setSidebarOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors border border-gray-200 hover:border-orange-200"
                   >
-                    {cat}
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <span>{cat}</span>
                   </Link>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Cart Sidebar */}
       {cartOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40">
-          <div className="absolute right-0 top-0 w-96 h-full bg-white shadow-lg flex flex-col">
+        <div className="fixed inset-0 z-50 bg-black/50">
+          <div className="absolute right-0 top-0 w-96 h-full bg-white shadow-xl flex flex-col">
             {/* Cart Header */}
-            <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-orange-400 to-orange-500 text-white">
-              <h2 className="text-lg font-semibold">Shopping Cart ({totalItems})</h2>
-              <button onClick={() => setCartOpen(false)}>
-                <X className="w-5 h-5 hover:text-gray-200" />
-              </button>
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 text-white">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Shopping Cart ({totalItems})</h2>
+                <button onClick={() => setCartOpen(false)} className="text-white hover:text-gray-200">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
-            {/* Delivery Location Selector */}
-            <div className="p-4 bg-gray-50 border-b">
-              <div className="flex items-center gap-2 mb-2">
+            {/* Delivery Location */}
+            <div className="p-4 bg-gray-50 border-b border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
                 <MapPin className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-medium text-gray-700">Delivery Location</span>
+                <span className="font-medium text-gray-700">Delivery Location</span>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setDeliveryLocation("inside")}
-                  className={`px-3 py-1.5 text-xs rounded-full border transition ${deliveryLocation === "inside"
-                    ? "bg-orange-400 text-white border-orange-400"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
-                    }`}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    deliveryLocation === "inside"
+                      ? "bg-orange-500 text-white border-orange-500"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-orange-300"
+                  }`}
                 >
                   Inside Dhaka (৳70)
                 </button>
                 <button
                   onClick={() => setDeliveryLocation("outside")}
-                  className={`px-3 py-1.5 text-xs rounded-full border transition ${deliveryLocation === "outside"
-                    ? "bg-orange-400 text-white border-orange-400"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
-                    }`}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    deliveryLocation === "outside"
+                      ? "bg-orange-500 text-white border-orange-500"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-orange-300"
+                  }`}
                 >
                   Outside Dhaka (৳120)
                 </button>
@@ -455,45 +576,49 @@ const Header = () => {
             {/* Cart Items */}
             <div className="flex-1 overflow-y-auto p-4">
               {cartItems.length === 0 ? (
-                <div className="text-center py-8">
-                  <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">Your cart is empty</p>
+                <div className="text-center py-12">
+                  <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 font-medium">Your cart is empty</p>
+                  <p className="text-gray-400 text-sm">Add some products to get started</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="flex gap-3 p-3 border rounded-lg bg-gray-50">
-                      <img
-                        src={item.photoUrl || "/placeholder.svg"}
-                        alt={item.productName}
-                        className="w-16 h-16 object-cover rounded-md"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm text-gray-800">{item.productName}</h4>
-                        <p className="text-xs text-gray-500">{item.size}</p>
-                        <p className="text-sm font-semibold text-orange-500">৳{item.price}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-2">
+                    <div key={item.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="flex gap-3">
+                        <img
+                          src={item.photoUrl || "/placeholder.svg"}
+                          alt={item.productName}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 mb-1">{item.productName}</h4>
+                          <p className="text-sm text-gray-500 mb-2">Size: {item.size}</p>
+                          <p className="font-semibold text-orange-500">৳{item.price}</p>
+
+                          <div className="flex items-center justify-between mt-3">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                              >
+                                <Minus className="w-4 h-4" />
+                              </button>
+                              <span className="font-medium w-8 text-center">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            </div>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                              onClick={() => removeItem(item.id)}
+                              className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
                             >
-                              <Minus className="w-3 h-3" />
-                            </button>
-                            <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
-                            <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
-                            >
-                              <Plus className="w-3 h-3" />
+                              Remove
                             </button>
                           </div>
-                          <button
-                            onClick={() => removeItem(item.id)}
-                            className="text-xs text-red-500 hover:text-red-700"
-                          >
-                            Remove
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -504,25 +629,25 @@ const Header = () => {
 
             {/* Cart Summary */}
             {cartItems.length > 0 && (
-              <div className="border-t bg-gray-50 p-4">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+              <div className="border-t border-gray-200 bg-gray-50 p-4">
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between text-sm">
                     <span>Subtotal:</span>
                     <span>৳{subtotal}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Delivery Charge:</span>
+                  <div className="flex justify-between text-sm">
+                    <span>Delivery:</span>
                     <span>৳{deliveryCharge}</span>
                   </div>
-                  <div className="flex justify-between font-semibold text-base border-t pt-2">
+                  <div className="flex justify-between font-semibold text-lg border-t border-gray-300 pt-3">
                     <span>Total:</span>
                     <span className="text-orange-500">৳{total}</span>
                   </div>
                 </div>
 
                 <button
-                  className="w-full mt-4 bg-orange-400 text-white py-3 rounded-lg font-medium hover:bg-orange-500 transition"
                   onClick={handleCheckout}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-medium transition-colors"
                 >
                   Proceed to Checkout
                 </button>
@@ -532,62 +657,9 @@ const Header = () => {
         </div>
       )}
 
-      {/* Desktop Bottom Nav */}
-      <div className="hidden md:block bg-orange-400">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center text-white justify-between font-medium">
-          <div
-            className="flex items-center cursor-pointer hover:text-[maroon] space-x-1 px-3 py-1.5 bg-white/10 rounded-lg hover:bg-white/20 transition"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="w-5 h-5" />
-            <span>Categories</span>
-          </div>
+      {/* Click outside to close dropdowns */}
+      {userMenuOpen && <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)}></div>}
 
-          <ul className="flex space-x-4">
-            {["Home", "Brands", "Blog"].map((item, idx) => (
-              <li key={idx}>
-                <Link
-                  to={`/${item.toLowerCase()}`}
-                  className="px-3 py-1.5 rounded-lg hover:text-[maroon] hover:bg-white/10 transition"
-                >
-                  {item}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Desktop Sidebar */}
-        <div
-          className={`fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-white via-rose-50 to-pink-100 shadow-2xl p-5 transition-transform duration-300 z-50 overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-        >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-[#800000]">Categories</h2>
-            <button onClick={() => setSidebarOpen(false)}>
-          <X className="w-5 h-5 text-gray-700 hover:text-red-600" />
-            </button>
-          </div>
-
-          <ul className="space-y-3">
-            {categories.map((cat, idx) => (
-          <li key={idx}>
-            <Link
-              to={`?category=${encodeURIComponent(cat)}`}
-              className="flex items-center px-3 py-2 rounded-lg border border-orange-500 shadow-sm text-gray-800 hover:bg-[#ffe4e6] hover:text-[#800000] transition"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="w-2.5 h-2.5 bg-orange-500 rounded-full mr-2"></span>
-              {cat}
-            </Link>
-          </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Dim Background for Sidebar */}
-      {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSidebarOpen(false)}></div>}
       <CheckoutModal />
     </header>
   )

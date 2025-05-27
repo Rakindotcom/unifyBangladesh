@@ -19,6 +19,8 @@ import FAQ from './Components/FAQ'
 import Story from './Components/Story'
 import Admin from './Pages/Admin'
 import Product from './Pages/Product'
+import ProtectedRoute from './Middlewares/ProtectedRoute'
+import NotAuthorized from './Pages/NotAuthorized'
 
 const App = () => {
   return (
@@ -31,7 +33,10 @@ const App = () => {
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} />
+
+        <Route element={<ProtectedRoute requiredRole="any" />}>
+          <Route path="/profile" element={<Profile />} />
+        </Route>
 
         <Route path="/mission" element={<Mission />} />
         <Route path="/refund" element={<Refund />} />
@@ -43,7 +48,11 @@ const App = () => {
         <Route path="/story" element={<Story />} />
         <Route path='/product/:id' element={<Product />} />
 
-        <Route path="/admin" element={<Admin />} />
+        <Route element={<ProtectedRoute requiredRole="admin" />}>
+          <Route path="/admin" element={<Admin />} />
+        </Route>
+
+        <Route path="/not-authorized" element={<NotAuthorized />} />
 
 
         {/* 404 Not Found */}
