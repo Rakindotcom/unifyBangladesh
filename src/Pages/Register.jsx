@@ -14,6 +14,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  //const [role, setRole] = useState("customer"); // Default role is 'user'
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -63,6 +64,7 @@ const Register = () => {
         email: user.email,
         name,
         photo: "",
+        role: "customer",
       });
 
       toast.success("Registration successful!", {

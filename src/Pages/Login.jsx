@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { getDoc, doc } from "firebase/firestore";
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,7 +59,20 @@ const Login = () => {
         autoClose: 5000,
         theme: "dark",
       });
-      navigate("/profile");
+      const userRef = doc(db, "Users", auth.currentUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        if (userData.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/profile");
+        }
+      } else {
+        console.log("No such user!");
+      }
+
     } catch (error) {
       toast.error(`Login failed: ${error.message}`, {
         position: "top-center",
@@ -147,9 +161,8 @@ const Login = () => {
                     setErrors({ ...errors, email: "" });
                   }}
                   placeholder="name@example.com"
-                  className={`pl-10 pr-4 py-2 w-full rounded-md border bg-gray-700 text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 ${
-                    errors.email ? "border-red-500" : "border-gray-600"
-                  }`}
+                  className={`pl-10 pr-4 py-2 w-full rounded-md border bg-gray-700 text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 ${errors.email ? "border-red-500" : "border-gray-600"
+                    }`}
                   required
                   aria-describedby={errors.email ? "email-error" : undefined}
                 />
@@ -176,9 +189,8 @@ const Login = () => {
                     setErrors({ ...errors, password: "" });
                   }}
                   placeholder="Enter your password"
-                  className={`pl-10 pr-12 py-2 w-full rounded-md border bg-gray-700 text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 ${
-                    errors.password ? "border-red-500" : "border-gray-600"
-                  }`}
+                  className={`pl-10 pr-12 py-2 w-full rounded-md border bg-gray-700 text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 ${errors.password ? "border-red-500" : "border-gray-600"
+                    }`}
                   required
                   aria-describedby={errors.password ? "password-error" : undefined}
                 />
@@ -213,9 +225,8 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md font-semibold text-base tracking-wide transition-colors duration-200 shadow-md hover:shadow-orange-500/50 ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md font-semibold text-base tracking-wide transition-colors duration-200 shadow-md hover:shadow-orange-500/50 ${loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -277,9 +288,8 @@ const Login = () => {
                     setResetErrors({ ...resetErrors, resetEmail: "" });
                   }}
                   placeholder="name@example.com"
-                  className={`pl-10 pr-4 py-2 w-full rounded-md border bg-gray-700 text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 ${
-                    resetErrors.resetEmail ? "border-red-500" : "border-gray-600"
-                  }`}
+                  className={`pl-10 pr-4 py-2 w-full rounded-md border bg-gray-700 text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 ${resetErrors.resetEmail ? "border-red-500" : "border-gray-600"
+                    }`}
                   required
                   aria-describedby={resetErrors.resetEmail ? "resetEmail-error" : undefined}
                 />
@@ -294,9 +304,8 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={resetLoading}
-                className={`flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md font-semibold text-base tracking-wide transition-colors duration-200 shadow-md hover:shadow-orange-500/50 ${
-                  resetLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md font-semibold text-base tracking-wide transition-colors duration-200 shadow-md hover:shadow-orange-500/50 ${resetLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
               >
                 {resetLoading ? (
                   <span className="flex items-center justify-center">
