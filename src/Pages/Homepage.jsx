@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import HeroSlideshow from "../Components/HeroSlideshow"
 import { db } from "../firebase"

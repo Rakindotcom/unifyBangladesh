@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin, User, LogOut, Heart, ChevronDown } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
@@ -33,25 +31,7 @@ const customStyles = {
   },
 }
 
-const categories = [
-  "Cream & Moisturizers",
-  "Essence",
-  "Eye Care",
-  "Face Mask",
-  "Face Primer",
-  "Facewash & Cleanser",
-  "Fragrance",
-  "Hair Care",
-  "Lip Care",
-  "Lotion",
-  "Makeup",
-  "Makeup Remover",
-  "Non Pharma",
-  "Serum",
-  "Sunscreen",
-  "Toner",
-  "Tools & Accessories",
-]
+import { PRODUCT_CATEGORIES, DELIVERY_CHARGES, NAV_ITEMS } from "../constants"
 
 let reloadCartLocal
 export { reloadCartLocal }
@@ -130,7 +110,7 @@ const Header = () => {
   }
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const deliveryCharge = deliveryLocation === "inside" ? 70 : 120
+  const deliveryCharge = deliveryLocation === "inside" ? DELIVERY_CHARGES.INSIDE_DHAKA : DELIVERY_CHARGES.OUTSIDE_DHAKA
   const total = subtotal + deliveryCharge
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -338,7 +318,7 @@ const Header = () => {
       >
         {/* Logo */}
         <Link to="/" className="flex-shrink-0">
-          <img src="/unifylogo.png" alt="SkinPlus Logo" className="h-12 w-auto" />
+          <img src="/unifylogo.png" alt="Unify Bangladesh Logo" className="h-12 w-auto" />
         </Link>
 
         {/* Desktop Search */}
@@ -374,6 +354,7 @@ const Header = () => {
           <button
             onClick={() => setCartOpen(true)}
             className="relative text-gray-600 hover:text-orange-500 transition-colors"
+            aria-label={`Shopping cart with ${totalItems} items`}
           >
             <ShoppingCart className="w-6 h-6" />
             {totalItems > 0 && (
@@ -450,7 +431,7 @@ const Header = () => {
 
             {/* Navigation Links */}
             <nav className="flex items-center space-x-8">
-              {["Home", "Brands", "Blog"].map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <Link
                   key={item}
                   to={`/${item.toLowerCase()}`}
@@ -478,7 +459,7 @@ const Header = () => {
             <div className="p-4 space-y-4">
               {/* Navigation Links */}
               <div className="space-y-2">
-                {["Home", "Brands", "Blog"].map((item) => (
+                {NAV_ITEMS.map((item) => (
                   <Link
                     key={item}
                     to={`/${item.toLowerCase()}`}
@@ -494,7 +475,7 @@ const Header = () => {
               <div className="border-t border-gray-200 pt-4">
                 <h3 className="font-semibold text-gray-900 mb-3">Categories</h3>
                 <div className="space-y-1 max-h-64 overflow-y-auto">
-                  {categories.map((cat) => (
+                  {PRODUCT_CATEGORIES.map((cat) => (
                     <Link
                       key={cat}
                       to={`?category=${encodeURIComponent(cat)}`}
@@ -524,7 +505,7 @@ const Header = () => {
 
             <div className="p-4 overflow-y-auto h-full">
               <div className="space-y-2">
-                {categories.map((cat) => (
+                {PRODUCT_CATEGORIES.map((cat) => (
                   <Link
                     key={cat}
                     to={`?category=${encodeURIComponent(cat)}`}
@@ -570,7 +551,7 @@ const Header = () => {
                       : "bg-white text-gray-700 border-gray-300 hover:border-orange-300"
                   }`}
                 >
-                  Inside Dhaka (৳70)
+                  Inside Dhaka (৳{DELIVERY_CHARGES.INSIDE_DHAKA})
                 </button>
                 <button
                   onClick={() => setDeliveryLocation("outside")}
@@ -580,7 +561,7 @@ const Header = () => {
                       : "bg-white text-gray-700 border-gray-300 hover:border-orange-300"
                   }`}
                 >
-                  Outside Dhaka (৳120)
+                  Outside Dhaka (৳{DELIVERY_CHARGES.OUTSIDE_DHAKA})
                 </button>
               </div>
             </div>

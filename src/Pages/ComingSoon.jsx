@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Mail, Bell, Rocket, Star, Heart, Zap, ArrowRight, CheckCircle } from "lucide-react"
 

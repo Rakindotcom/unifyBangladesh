@@ -1,4 +1,3 @@
-"use client"
 import { Link, useNavigate } from "react-router-dom"
 import { Shield, Lock, ArrowLeft, Home, LogIn, Mail } from "lucide-react"
 

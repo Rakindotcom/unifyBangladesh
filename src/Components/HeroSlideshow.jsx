@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 const slides = [
     { src: "/1.webp", alt: "Slide 1" },
@@ -6,7 +6,7 @@ const slides = [
     { src: "/3.webp", alt: "Slide 3" },
 ];
 
-const HeroSlideshow = () => {
+const HeroSlideshow = React.memo(() => {
     const [currentSlide, setCurrentSlide] = useState(0);
 
     // Auto-play: Change slide every 3 seconds
@@ -55,5 +55,7 @@ const HeroSlideshow = () => {
         </div>
     );
 };
+
+});
 
 export default HeroSlideshow;

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { PlusCircle, ShoppingCart, Upload, Filter, Eye, EyeOff } from "lucide-react"
 import { db } from "../firebase"
@@ -10,6 +8,7 @@ import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "react-toastify"
+import { PRODUCT_CATEGORIES, ORDER_STATUS, SIZE_UNITS } from "../constants"
 
 const OrdersTab = () => {
   const [orders, setOrders] = useState([])
@@ -319,10 +318,11 @@ const Admin = () => {
       // Upload image to Cloudinary
       const imageFormData = new FormData()
       imageFormData.append("file", formData.photo)
-      imageFormData.append("upload_preset", "unify-bangladesh")
+      imageFormData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "unify-bangladesh")
 
       toast.info("Uploading image...")
-      const res = await axios.post("https://api.cloudinary.com/v1_1/djx4fqoay/image/upload", imageFormData)
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "djx4fqoay"
+      const res = await axios.post(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, imageFormData)
       const imageUrl = res.data.secure_url
 
       const productData = {
@@ -468,23 +468,11 @@ const Admin = () => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent h-32"
                   required
                 >
-                  <option value="Cream & Moisturizers">Cream & Moisturizers</option>
-                  <option value="Essence">Essence</option>
-                  <option value="Eye Care">Eye Care</option>
-                  <option value="Face Mask">Face Mask</option>
-                  <option value="Face Primer">Face Primer</option>
-                  <option value="Facewash & Cleanser">Facewash & Cleanser</option>
-                  <option value="Fragrance">Fragrance</option>
-                  <option value="Hair Care">Hair Care</option>
-                  <option value="Lip Care">Lip Care</option>
-                  <option value="Lotion">Lotion</option>
-                  <option value="Makeup">Makeup</option>
-                  <option value="Makeup Remover">Makeup Remover</option>
-                  <option value="Non Pharma">Non Pharma</option>
-                  <option value="Serum">Serum</option>
-                  <option value="Sunscreen">Sunscreen</option>
-                  <option value="Toner">Toner</option>
-                  <option value="Tools & Accessories">Tools & Accessories</option>
+                  {PRODUCT_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -511,12 +499,11 @@ const Admin = () => {
                       onChange={(e) => setFormData({ ...formData, sizeUnit: e.target.value })}
                       className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     >
-                      <option value="gm">Grams (gm)</option>
-                      <option value="ml">Milliliters (ml)</option>
-                      <option value="liter">Liters (liter)</option>
-                      <option value="kg">Kilograms (kg)</option>
-                      <option value="oz">Ounces (oz)</option>
-                      <option value="fl">Fluid Ounces (fl)</option>
+                      {SIZE_UNITS.map((unit) => (
+                        <option key={unit.value} value={unit.value}>
+                          {unit.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Enter the product size/weight/volume</p>

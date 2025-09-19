@@ -1,10 +1,10 @@
-// src/components/ProtectedRoute.jsx
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../firebase"; // your firebase setup
+import { auth, db } from "../firebase";
 import { toast } from "react-toastify";
+import PropTypes from 'prop-types';
 
 export default function ProtectedRoute({ requiredRole }) {
   const [userStatus, setUserStatus] = useState("loading"); // loading | unauthorized | authorized
@@ -44,3 +44,7 @@ export default function ProtectedRoute({ requiredRole }) {
 
   return <Outlet />;
 }
+
+ProtectedRoute.propTypes = {
+  requiredRole: PropTypes.string.isRequired,
+};
