@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { ShoppingCart, Search, Menu, X, Plus, Minus, MapPin, User, LogOut, Heart, ChevronDown } from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { db, auth } from "../firebase"
 import { signOut } from "firebase/auth"
 import { collection, addDoc, doc, getDoc } from "firebase/firestore"
@@ -317,9 +317,9 @@ const Header = () => {
         className={`max-w-7xl mx-auto px-4 py-3 ${isSearchActive ? "hidden md:flex" : "flex"} items-center justify-between`}
       >
         {/* Logo */}
-        <Link to="/" className="flex-shrink-0">
+        <a href="/" className="flex-shrink-0">
           <img src="/unifylogo.png" alt="Unify Bangladesh Logo" className="h-12 w-auto" />
-        </Link>
+        </a>
 
         {/* Desktop Search */}
         <div className="hidden md:block flex-1 mx-8 max-w-xl">
@@ -366,11 +366,11 @@ const Header = () => {
 
           {/* User Section */}
           {!currentUser ? (
-            <Link to="/login">
+            <a href="/login">
               <button className="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors">
                 Sign In
               </button>
-            </Link>
+            </a>
           ) : (
             <div className="relative">
               <button
@@ -389,14 +389,14 @@ const Header = () => {
               {/* User Dropdown */}
               {userMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                  <Link
-                    to="/profile"
+                  <a
+                    href="/profile"
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <User className="w-4 h-4" />
                     My Profile
-                  </Link>
+                  </a>
                   <button
                     onClick={onLogout}
                     className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors w-full text-left"
@@ -432,13 +432,13 @@ const Header = () => {
             {/* Navigation Links */}
             <nav className="flex items-center space-x-8">
               {NAV_ITEMS.map((item) => (
-                <Link
+                <a
                   key={item}
-                  to={`/${item.toLowerCase()}`}
+                  href={`/${item.toLowerCase()}`}
                   className="text-white hover:text-orange-100 font-medium py-3 transition-colors"
                 >
                   {item}
-                </Link>
+                </a>
               ))}
             </nav>
           </div>
@@ -460,14 +460,14 @@ const Header = () => {
               {/* Navigation Links */}
               <div className="space-y-2">
                 {NAV_ITEMS.map((item) => (
-                  <Link
+                  <a
                     key={item}
-                    to={`/${item.toLowerCase()}`}
+                    href={`/${item.toLowerCase()}`}
                     onClick={() => setMobileMenuOpen(false)}
                     className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
                   >
                     {item}
-                  </Link>
+                  </a>
                 ))}
               </div>
 
@@ -476,14 +476,14 @@ const Header = () => {
                 <h3 className="font-semibold text-gray-900 mb-3">Categories</h3>
                 <div className="space-y-1 max-h-64 overflow-y-auto">
                   {PRODUCT_CATEGORIES.map((cat) => (
-                    <Link
+                    <a
                       key={cat}
-                      to={`?category=${encodeURIComponent(cat)}`}
+                      href={`?category=${encodeURIComponent(cat)}`}
                       onClick={() => setMobileMenuOpen(false)}
                       className="block px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
                     >
                       {cat}
-                    </Link>
+                    </a>
                   ))}
                 </div>
               </div>
@@ -506,15 +506,15 @@ const Header = () => {
             <div className="p-4 overflow-y-auto h-full">
               <div className="space-y-2">
                 {PRODUCT_CATEGORIES.map((cat) => (
-                  <Link
+                  <a
                     key={cat}
-                    to={`?category=${encodeURIComponent(cat)}`}
+                    href={`?category=${encodeURIComponent(cat)}`}
                     onClick={() => setSidebarOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors border border-gray-200 hover:border-orange-200"
                   >
                     <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                     <span>{cat}</span>
-                  </Link>
+                  </a>
                 ))}
               </div>
             </div>

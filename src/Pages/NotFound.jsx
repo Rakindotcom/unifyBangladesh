@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+
 import { Home, ArrowLeft, Search, RefreshCw } from "lucide-react"
 import "../CSS/not-found-styles.css"
 
@@ -30,13 +30,13 @@ const NotFound = () => {
 
         {/* Action Buttons */}
         <div className="space-y-4">
-          <Link
-            to="/"
+          <a
+            href="/"
             className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/25 flex items-center justify-center gap-2 group"
           >
             <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
             Go Back Home
-          </Link>
+          </a>
 
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -61,17 +61,17 @@ const NotFound = () => {
         <div className="mt-8 p-4 bg-white/50 rounded-xl border border-orange-200">
           <p className="text-sm text-gray-600 mb-2">Need help? Try these:</p>
           <div className="flex flex-wrap justify-center gap-2 text-xs">
-            <Link to="/" className="text-orange-500 hover:text-orange-600 transition-colors">
+            <a href="/" className="text-orange-500 hover:text-orange-600 transition-colors">
               Homepage
-            </Link>
+            </a>
             <span className="text-gray-300">•</span>
-            <Link to="/products" className="text-orange-500 hover:text-orange-600 transition-colors">
+            <a href="/products" className="text-orange-500 hover:text-orange-600 transition-colors">
               Products
-            </Link>
+            </a>
             <span className="text-gray-300">•</span>
-            <Link to="/contact" className="text-orange-500 hover:text-orange-600 transition-colors">
+            <a href="/contact" className="text-orange-500 hover:text-orange-600 transition-colors">
               Contact
-            </Link>
+            </a>
           </div>
         </div>
 

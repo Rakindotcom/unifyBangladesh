@@ -1,5 +1,5 @@
 import { Target, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
+
 
 const Mission = () => {
   return (
@@ -54,12 +54,12 @@ const Mission = () => {
 
         {/* Navigation Link */}
         <div className="text-center">
-          <Link
-            to="/"
+          <a
+            href="/"
             className="inline-block bg-orange-600 hover:bg-orange-700 text-white py-2.5 px-6 rounded-lg font-bold text-base tracking-wide transition-colors duration-200 shadow-md hover:shadow-orange-600/40"
           >
             Back to Home
-          </Link>
+          </a>
         </div>
       </div>
     </div>

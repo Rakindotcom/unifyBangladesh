@@ -1,5 +1,5 @@
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from "react-icons/fa";
-import { Link } from "react-router-dom";
+
 
 const Footer = () => {
   return (
@@ -19,29 +19,29 @@ const Footer = () => {
           <nav aria-label="Quick links">
             <ul className="space-y-2 text-sm text-gray-300">
               <li>
-                <Link to="/mission" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/mission" className="hover:text-orange-300 transition-colors duration-200">
                   Mission and Vision
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/story" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/story" className="hover:text-orange-300 transition-colors duration-200">
                   Our Story
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/team" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/team" className="hover:text-orange-300 transition-colors duration-200">
                   Team Information
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/faqs" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/faqs" className="hover:text-orange-300 transition-colors duration-200">
                   FAQs
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/contact" className="hover:text-orange-300 transition-colors duration-200">
                   Contact Us
-                </Link>
+                </a>
               </li>
             </ul>
           </nav>
@@ -53,24 +53,24 @@ const Footer = () => {
           <nav aria-label="Legal links">
             <ul className="space-y-2 text-sm text-gray-300">
               <li>
-                <Link to="/refund" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/refund" className="hover:text-orange-300 transition-colors duration-200">
                   Refund & Return Policy
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/privacy" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/privacy" className="hover:text-orange-300 transition-colors duration-200">
                   Privacy and Confidentiality
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/terms" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/terms" className="hover:text-orange-300 transition-colors duration-200">
                   Terms & Conditions
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/shipping" className="hover:text-orange-300 transition-colors duration-200">
+                <a href="/shipping" className="hover:text-orange-300 transition-colors duration-200">
                   Shipping & Delivery
-                </Link>
+                </a>
               </li>
             </ul>
           </nav>

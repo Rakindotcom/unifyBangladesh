@@ -4,7 +4,7 @@ import { db } from "../firebase"
 import { collection, getDocs } from "firebase/firestore"
 import { toast } from "react-toastify"
 import { reloadCartLocal } from "../Components/Header"
-import { Link, useSearchParams } from "react-router-dom"
+import { useSearchParams } from "react-router-dom"
 
 const Homepage = () => {
   const [products, setProducts] = useState([])
@@ -121,9 +121,9 @@ const Homepage = () => {
                   {categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)} Products
                 </h1>
                 <div className="w-20 h-1 bg-orange-400 mx-auto mb-4"></div>
-                <Link to="/" className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
+                <a href="/" className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
                   ← View All Products
-                </Link>
+                </a>
               </>
             ) : (
               <>
@@ -134,9 +134,9 @@ const Homepage = () => {
                 <p className="text-gray-600 mb-4">
                   Found {products.length} product{products.length !== 1 ? "s" : ""} matching your search
                 </p>
-                <Link to="/" className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
+                <a href="/" className="text-orange-500 hover:text-orange-600 font-medium transition-colors">
                   ← Back to Homepage
-                </Link>
+                </a>
               </>
             )}
           </div>
@@ -164,12 +164,12 @@ const Homepage = () => {
                   <div className="w-12 h-0.5 bg-orange-400"></div>
                 </div>
                 {!searchParams.get("product") && (
-                  <Link
-                    to={`/category/${category.toLowerCase()}`}
+                  <a
+                    href={`/category/${category.toLowerCase()}`}
                     className="text-orange-500 hover:text-orange-600 text-sm font-medium transition-colors"
                   >
                     View All →
-                  </Link>
+                  </a>
                 )}
               </div>
 
@@ -181,7 +181,7 @@ const Homepage = () => {
 
                   return (
                     <div key={product.id} className="group">
-                      <Link to={`/product/${product.id}`} className="block">
+                      <a href={`/product/${product.id}`} className="block">
                         <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100">
                           {/* Image Container */}
                           <div className="relative overflow-hidden">
@@ -228,7 +228,7 @@ const Homepage = () => {
                             </div>
                           </div>
                         </div>
-                      </Link>
+                      </a>
                     </div>
                   )
                 })}
